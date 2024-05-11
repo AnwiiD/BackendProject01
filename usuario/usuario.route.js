@@ -33,9 +33,7 @@ async function PostUsuario(req, res) {
 async function PatchUsuarios(req, res) {
     try {
         // llamada a controlador con los datos
-        console.log("empezamos el patch")
         await updateUsuario(req.body,req.userId);
-
         res.status(200).json({
             mensaje: "Usuario actualizado. 👍"
         })

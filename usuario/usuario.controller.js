@@ -16,7 +16,7 @@ async function createUsuario(datos) {
     if (!name || !username || !password) {
         throwCustomError(400, "Faltan datos");
     }
-
+    
     const UsuarioCreado = await createUser(datos);
     const token=crearToken(UsuarioCreado);
     return {UsuarioCreado,token};
@@ -25,7 +25,6 @@ async function createUsuario(datos) {
 
 async function updateUsuario(datos, userId) {
     const { ...cambios } = datos;
-    console.log("seguimos")
     const Usuario = await updateUser( cambios, userId);
 
     return Usuario;

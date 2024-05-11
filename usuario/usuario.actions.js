@@ -16,7 +16,9 @@ async function createUser(data) {
         const usuarioCreado = await Usuario.create(data)
         return usuarioCreado
     }
-    catch { throwCustomError(400, "No se pudo crear el usuario") }
+    catch(e) { 
+        throwCustomError(400, e.message)
+    }
 }
 
 async function updateUser(data, userId) {
