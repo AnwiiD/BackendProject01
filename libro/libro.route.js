@@ -6,7 +6,7 @@ const { verificarToken } = require("../utils/auth");
 
 async function getLibros(req, res) {
     try {
-        const filtro = ["name", "author", "genre", "publicationDate", "editorial"]
+        const filtro = ["owner","name", "author", "genre", "publicationDate", "editorial"]
         const filtros = Object.fromEntries(
             Object.entries(req.query).filter(([clave]) => filtro.includes(clave))
         );

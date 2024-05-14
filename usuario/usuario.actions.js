@@ -30,7 +30,7 @@ async function createUser(data) {
     }
 }
 
-async function updateUser(data,paramid, userId) {
+async function updateUser(data, paramid, userId) {
 
     const usuario = await Usuario.findById(paramid);
     if (!usuario || usuario.isDeleted) {

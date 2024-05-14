@@ -5,7 +5,7 @@ const schemaOrder = new mongoose.Schema({
     seller: {type: String, required: true}, 
     books: {type: [String], required: true},
     status: { type: String, enum: ['On Progress', 'Cancelled', 'Completed'],default: 'On Progress', required: true },
-    dropOffAddress: {type: String, required:true},
+    Address: {type: String, required:true},
     isCancelled: {type: Boolean, default: false},
     isCompleted: {type: Boolean, default: false},
     isDeleted: {

@@ -17,16 +17,12 @@ const schemaBook = new mongoose.Schema({
         required: true
     },
     publicationDate: {
-        type: Date,
+        type: String,
         required: true
     },
     editorial: {
         type: String,
         required: true
-    },
-    units: {
-        type: Number,
-        default: 1
     },
     Avaliable: {
         type: Boolean,
