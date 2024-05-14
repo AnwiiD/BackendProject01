@@ -74,25 +74,49 @@ async function updatePedidoController(userid, changes) {
 
     }
 }
-async function createPedidoController(datos) {
-    const { buyer, seller, books, Address } = datos;
-    if (!buyer || !seller || !books || !Address) {
+async function createPedidoController(datos, userId) {
+    const { books, Address } = datos;
+    if (!books || !Address) {
         throwCustomError(400, "Faltan datos");
     }
-    const userBuyer = await getUsuarioById(buyer);
-    const userSeller = await getUsuarioById(seller);
-    if (!userBuyer || !userSeller) {
-        throwCustomError(400, "No se encontraron usuarios");
+
+    let infoBooks = []
+    for (const id of datos.books) {
+        book = await getLibroById(id);
+        if (!book) {
+            throwCustomError(400, "El libro no existe");
+        }
+        infoBooks.push(book);
     }
-    const libros = await getLibros({ _id: { $in: books } });
-    if (libros.length === 0) {
-        throwCustomError(400, "No se encontraron libros");
+    for (const book of infoBooks) {
+        if (book.owner === userId) {
+            throwCustomError(400, "No puedes comprar tus libros");
+        }
+        const libs = await getLibros({ owner: infoBooks[0].owner });
+        console.log(libs);
+        if (libs.length === 0) {
+            throwCustomError(400, "No se encontraron libros");
+        }
+        const idLibs = libs.map(lib => lib.id.toString());
+
+        if (!idLibs.includes(book.id.toString())) {
+            throwCustomError(400, "El libro no es del mismo vendedor");
+        }
+        owner = infoBooks[0].owner;
+
     }
-    const librosDisponibles = libros.filter(libro => libro.Avaliable === true && libro.isDeleted === false);
-    if (librosDisponibles.length !== libros.length) {
-        throwCustomError(400, "No se encontraron libros disponibles");
+    const orderToCreate = {
+        ...datos,
+        buyer: userId,
+        seller: owner,
+        status: "On Progress"
     }
-    return await createPedido(datos);
+    try {
+        return await createPedido(orderToCreate);
+    }
+    catch (error) {
+        throwCustomError(400, "No se pudo crear el pedido");
+    }
 }
 async function deletePedidoController(id) {
     return await deletePedido(id);

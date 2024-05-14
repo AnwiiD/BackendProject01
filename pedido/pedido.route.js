@@ -25,7 +25,7 @@ async function GetPedidoById(req, res) {
 }}
 async function CreatePedido(req, res) {
     try {
-        const pedido = await createPedidoController(req.body)
+        const pedido = await createPedidoController(req.body,req.userId)
         res.status(201).json({
             mensaje: 'Pedido creado',
             pedido
@@ -56,7 +56,7 @@ async function DeletePedido(req, res) {
 router.get('/', verificarToken, Getpedidos)
 router.get('/:id', verificarToken, GetPedidoById)
 router.post('/', verificarToken, CreatePedido)
-router.put('/:id', verificarToken, UpdatePedido)
+router.patch('/:id', verificarToken, UpdatePedido)
 router.delete('/:id', verificarToken, DeletePedido)
 
 module.exports = router;
