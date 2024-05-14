@@ -37,8 +37,7 @@ async function UpdatePedido(req, res) {
     try {
         const pedido = await updatePedidoController(req.params.id, req.body, req.userId)
         res.status(200).json({
-            mensaje: 'Pedido actualizado',
-            pedido
+            mensaje: 'Pedido actualizado'
         })
     } catch (error) {
         respondWithError(res, error)

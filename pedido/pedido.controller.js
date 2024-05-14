@@ -5,7 +5,7 @@ const { getLibroById, getLibros, updateLibro } = require('../libro/libro.actions
 
 async function getPedidosController(query, id) {
     if (!query.startDate && !query.endDate) {
-        pedidos= await getPedidos(query);
+        pedidos = await getPedidos(query);
     } else {
         if (query.startDate && query.endDate) {
             pedidos = await getPedidos({ createdAt: { $gte: query.startDate, $lte: query.endDate } });
@@ -27,60 +27,68 @@ async function getPedidosController(query, id) {
         return pedidosMios;
     }
 }
-async function getPedidoByIdController(id,userId) {
+async function getPedidoByIdController(id, userId) {
     const pedido = await getPedidoById(id);
     if (pedido.buyer !== userId && pedido.seller !== userId) {
         throwCustomError(400, "No tienes permisos");
     }
-    if(pedido.isDeleted){
+    if (pedido.isDeleted) {
         throwCustomError(404, "Pedido no encontrado");
     }
     return pedido
 }
-async function updateStatusPedidoController(id) {
-    const pedidos = await getPedidosController({ _id: id });
-    const libros = pedidos[0].books;
+async function updateStatusPedidoController(id, userId) {
+    const pedido = await getPedidoByIdController( id, userId);
+    const libros = pedidos.books;
     for (let libro in libros) {
         return await updateLibro({ _id: libros[libro] }, { Avaliable: false, isDeleted: true });
     }
 
     return pedido;
 }
-async function updatePedidoController(userid, changes) {
+async function updatePedidoController(id, changes, userid) {
     const { _id, status, ...rest } = changes;
     if (Object.keys(rest).length > 0 || !status) {
         throwCustomError(400, "No se puede modificar el pedido");
     } else {
-        pedido = await getPedidoById(_iid);
+        pedido = await getPedidoById(id);
         if (pedido.length === 0) {
             throwCustomError(400, "No hay info");
         }
-        const info = pedido[0];
+        const info = pedido
+        console.log(info.seller, info.buyer, userid, status);
         if (info.status === "Completed" || info.status === "Cancelled") {
             throwCustomError(400, "No se puede modificar el pedido");
         }
-        if (info.buyer !== userid || info.seller !== userid) {
-            throwCustomError(400, "No se puede modificar el pedido");
-        }
-        if (info.buyer === userid && status !== "Cancelled") {
-            throwCustomError(400, "No se puede modificar el pedido");
-        } else {
-            return await updatePedido(_id, { status });
-        }
-        if (info.seller === userid && status !== "Completed" && status !== "Cancelled") {
-            throwCustomError(400, "No se puede modificar el pedido");
-        } else {
-            if (status === "Cancelled") {
-                return await updatePedido(_id, { status, isCancelled: true });
-            } else {
-                const result = await updatePedido(_id, { status, isCompleted: true });
-                await updateStatusPedidoController(_id);
-                return result;
-            }
+        if (info.buyer !== userid && info.seller !== userid) {
+            throwCustomError(400, "No tienes acceso a este pedido");
         }
 
+        if (info.buyer === userid) {
+            if (status !== "Cancelled") {
+                throwCustomError(400, "No se puede modificar el pedido");
+            }
+            return await updatePedido(id, { status: "Cancelled", isCancelled: true });
+        }
+
+        if (info.seller === userid) {
+            if (status !== "Cancelled" && status !== "Completed") {
+                throwCustomError(400, "No se puede modificar el pedido");
+            }
+
+            if (status === "Cancelled") {
+                return await updatePedido(id, { status: status, isCancelled: true });
+            }
+
+            const result = await updatePedido(id, { status: status, isCompleted: true });
+            await updateStatusPedidoController(id,userid);
+            return result;
+
+        }
     }
+
 }
+
 async function createPedidoController(datos, userId) {
     const { books, Address } = datos;
     if (!books || !Address) {
@@ -143,7 +151,14 @@ async function createPedidoController(datos, userId) {
         throwCustomError(400, "No se pudo crear el pedido");
     }
 }
-async function deletePedidoController(id) {
+async function deletePedidoController(id, userId) {
+    const pedido = await getPedidoById(id);
+    if (pedido.buyer !== userId && pedido.seller !== userId) {
+        throwCustomError(400, "No tienes permisos");
+    }
+    if (pedido.isDeleted) {
+        throwCustomError(404, "Pedido no encontrado");
+    }
     return await deletePedido(id);
 }
 module.exports = {
