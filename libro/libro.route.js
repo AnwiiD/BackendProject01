@@ -8,7 +8,7 @@ async function getLibros(req, res) {
     try {
         const filtro = ["name", "author", "genre", "publicationDate", "editorial"]
         const filtros = Object.fromEntries(
-            Object.entries(req.query).filter(([clave]) => clavesDeseadas.includes(clave))
+            Object.entries(req.query).filter(([clave]) => filtro.includes(clave))
         );
         const libros = await getLibrosController(filtros);
         res.status(200).json(libros);
@@ -28,7 +28,7 @@ async function createLibro(req, res) {
     try {
         info = {
             ...req.body,
-            owner: req.username
+            owner: req.userId
         }
         const libro = await createLibroController(info);
         res.status(201).json({ mensaje: 'Libro creado', libro });
@@ -38,7 +38,7 @@ async function createLibro(req, res) {
 }
 async function updateLibro(req, res) {
     try {
-        const libro = await updateLibroController(req.params.id, req.body);
+        const libro = await updateLibroController(req.params.id, req.body,req.userId);
         res.status(200).json({
             mensaje: "Updated."
         })
@@ -59,7 +59,7 @@ async function deleteLibro(req, res) {
 router.get('/', getLibros);
 router.get('/:id', getLibroById);
 router.post('/',verificarToken, createLibro);
-router.patch('/',verificarToken, updateLibro);
+router.patch('/:id',verificarToken, updateLibro);
 router.delete('/:id',verificarToken, deleteLibro);
 
 

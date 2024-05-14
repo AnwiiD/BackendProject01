@@ -1,13 +1,25 @@
 const express = require('express')
 const router = express.Router();
-const {  readUsuario, createUsuario, updateUsuario, deleteUsuario } = require("./usuario.controller");
-const { respondWithError, throwCustomError } = require('../utils/function');
+const {  readUsuario, createUsuario, updateUsuario, deleteUsuario, readUsuarioname} = require("./usuario.controller");
+const { respondWithError} = require('../utils/function');
 const {verificarToken} = require('../utils/auth'); 
 
 
 async function GetUsuariosId(req, res) {
     try {
         const result = await readUsuario(req.params.id);
+        res.status(200).json({
+            result
+        })
+    } catch(e) {
+        respondWithError(res, e);
+        
+    }
+}
+
+async function GetUsuarioName(req, res) {
+    try {
+        const result = await readUsuarioname(req.params.username);
         res.status(200).json({
             result
         })
@@ -33,12 +45,12 @@ async function PostUsuario(req, res) {
 async function PatchUsuarios(req, res) {
     try {
         // llamada a controlador con los datos
-        await updateUsuario(req.body,req.userId);
+        await updateUsuario(req.body,req.params.id,req.userId);
         res.status(200).json({
             mensaje: "Usuario actualizado. 👍"
         })
     } catch(e) {
-        respondWithError(res, error);
+        respondWithError(res, e);
     }
 }
 
@@ -52,11 +64,12 @@ async function DeleteUsuarios(req, res) {
             mensaje: "Exito. 👍"
         })
     } catch(e) {
-        respondWithError(res, error);
+        respondWithError(res, e);
     }
 }
 
 
+router.get("/user/:username",verificarToken,GetUsuarioName);
 router.get("/:id",verificarToken,GetUsuariosId);
 router.post("/", PostUsuario);
 router.patch("/:id", verificarToken, PatchUsuarios);
