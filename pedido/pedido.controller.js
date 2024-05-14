@@ -38,13 +38,20 @@ async function getPedidoByIdController(id, userId) {
     return pedido
 }
 async function updateStatusPedidoController(id, userId) {
-    const pedido = await getPedidoByIdController( id, userId);
-    const libros = pedidos.books;
-    for (let libro in libros) {
-        return await updateLibro({ _id: libros[libro] }, { Avaliable: false, isDeleted: true });
+    const pedido = await getPedidoByIdController(id, userId);
+    const libros = pedido.books;
+    for (const libro of libros) {
+        await updateLibro(libro, { Avaliable: false, isDeleted: true });
+        const pedidos = await getPedidos({ books: libro });
+        console.log(pedidos)
+        for (const pedido of pedidos) {
+            if (pedido.status !== "Completed" || pedido.status !== "Cancelled") {
+                await updatePedido(pedido.id, { isCancelled: true, status: "Cancelled" });
+            }
+        }
     }
 
-    return pedido;
+    return;
 }
 async function updatePedidoController(id, changes, userid) {
     const { _id, status, ...rest } = changes;
@@ -81,7 +88,7 @@ async function updatePedidoController(id, changes, userid) {
             }
 
             const result = await updatePedido(id, { status: status, isCompleted: true });
-            await updateStatusPedidoController(id,userid);
+            await updateStatusPedidoController(id, userid);
             return result;
 
         }
