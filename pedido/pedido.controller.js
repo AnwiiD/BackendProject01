@@ -5,7 +5,7 @@ const { getLibroById, getLibros, updateLibro } = require('../libro/libro.actions
 
 async function getPedidosController(query, id) {
     if (!query.startDate && !query.endDate) {
-        return await getPedidos(query);
+        pedidos= await getPedidos(query);
     } else {
         if (query.startDate && query.endDate) {
             pedidos = await getPedidos({ createdAt: { $gte: query.startDate, $lte: query.endDate } });
@@ -27,8 +27,15 @@ async function getPedidosController(query, id) {
         return pedidosMios;
     }
 }
-async function getPedidoByIdController(id) {
-    return await getPedidoById(id);
+async function getPedidoByIdController(id,userId) {
+    const pedido = await getPedidoById(id);
+    if (pedido.buyer !== userId && pedido.seller !== userId) {
+        throwCustomError(400, "No tienes permisos");
+    }
+    if(pedido.isDeleted){
+        throwCustomError(404, "Pedido no encontrado");
+    }
+    return pedido
 }
 async function updateStatusPedidoController(id) {
     const pedidos = await getPedidosController({ _id: id });
@@ -82,11 +89,22 @@ async function createPedidoController(datos, userId) {
 
     let infoBooks = []
     for (const id of datos.books) {
-        book = await getLibroById(id);
+        try {
+            book = await getLibroById(id);
+        } catch (error) {
+            throwCustomError(400, "El libro no existe");
+        }
+
         if (!book) {
             throwCustomError(400, "El libro no existe");
         }
-        infoBooks.push(book);
+        console.log(book);
+        if (infoBooks.some(infoBook => infoBook.id === book.id)) {
+            throwCustomError(400, "El libro ya está en la lista");
+        } else {
+            infoBooks.push(book);
+
+        }
     }
     for (const book of infoBooks) {
         if (book.owner === userId) {
@@ -98,9 +116,16 @@ async function createPedidoController(datos, userId) {
             throwCustomError(400, "No se encontraron libros");
         }
         const idLibs = libs.map(lib => lib.id.toString());
+        if (idLibs.length === 0) {
+            throwCustomError(400, "No se encontraron libros");
+        }
+
 
         if (!idLibs.includes(book.id.toString())) {
             throwCustomError(400, "El libro no es del mismo vendedor");
+        }
+        if (!book.Avaliable) {
+            throwCustomError(400, "El libro no está disponible");
         }
         owner = infoBooks[0].owner;
 

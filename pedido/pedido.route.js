@@ -16,7 +16,7 @@ async function Getpedidos(req, res) {
 }}
 async function GetPedidoById(req, res) {
     try {
-        const pedido = await getPedidoByIdController(req.params.id)
+        const pedido = await getPedidoByIdController(req.params.id,req.userId)
         res.status(200).json({
             pedido
         })
